@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import '../../../core/constants/app_theme.dart';
-
 class CreateUploadProgress extends StatelessWidget {
   final double progress;
 
@@ -10,58 +8,58 @@ class CreateUploadProgress extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final int percent = (progress * 100).clamp(0, 100).toInt();
+
     return Center(
       child: Padding(
         padding: EdgeInsets.symmetric(horizontal: 40.w),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              width: 100.w,
-              height: 100.w,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [Color(0xFFFF4D8D), AppTheme.primaryBlue],
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppTheme.primaryBlue.withOpacity(0.3),
-                    blurRadius: 20,
-                    spreadRadius: 4,
+            SizedBox(
+              width: 80.w,
+              height: 80.w,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  CircularProgressIndicator(
+                    value: progress > 0 ? progress : null,
+                    strokeWidth: 3.5,
+                    backgroundColor: Colors.white.withValues(alpha: 0.08),
+                    valueColor: const AlwaysStoppedAnimation<Color>(
+                      Color(0xFF3B82F6),
+                    ),
+                  ),
+                  Center(
+                    child: Text(
+                      '$percent%',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18.sp,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.5,
+                      ),
+                    ),
                   ),
                 ],
               ),
-              child: Center(
-                child: Text(
-                  '${(progress * 100).toInt()}%',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 22.sp,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ),
             ),
-            SizedBox(height: 28.h),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(20.r),
-              child: LinearProgressIndicator(
-                value: progress,
-                minHeight: 8.h,
-                backgroundColor: Colors.grey.shade200,
-                valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.primaryBlue),
-              ),
-            ),
-            SizedBox(height: 16.h),
+            SizedBox(height: 24.h),
             Text(
-              'Uploading your photos...',
+              'Publishing Show Off',
               style: TextStyle(
-                fontSize: 15.sp,
+                fontSize: 16.sp,
                 fontWeight: FontWeight.w600,
-                color: AppTheme.textSecondary,
+                color: Colors.white,
+                letterSpacing: -0.2,
+              ),
+            ),
+            SizedBox(height: 6.h),
+            Text(
+              'Optimizing and uploading your media...',
+              style: TextStyle(
+                fontSize: 13.sp,
+                color: const Color(0xFF94A3B8),
               ),
             ),
           ],

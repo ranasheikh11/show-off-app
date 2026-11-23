@@ -4,8 +4,10 @@ class ApiUrl {
   //     'https://nazrul-academy-alumni.com/showoff/api';
   // static const String socketUrl = 'https://nazrul-academy-alumni.com';
 
-  static const String baseUrl = 'https://show-off-gamma.vercel.app/api';
-  static const String socketUrl = 'https://show-off-gamma.vercel.app';
+  // static const String baseUrl = 'https://show-off-gamma.vercel.app/api';
+  // static const String socketUrl = 'https://show-off-gamma.vercel.app';
+  static const String baseUrl = 'http://192.168.1.101:5000/api';
+  static const String socketUrl = 'http://192.168.1.101:5000';
 
   // Auth endpoints
   static const String login = '$baseUrl/auth/login';
@@ -20,6 +22,7 @@ class ApiUrl {
   static const String discoverUsers = '$baseUrl/users/discover';
   static const String searchUsers = '$baseUrl/users/search';
   static const String deleteAccount = '$baseUrl/users/me';
+  static const String deactivateAccount = '$baseUrl/users/deactivate';
   static const String acceptPrivacyPolicy =
       '$baseUrl/users/accept-privacy-policy';
 

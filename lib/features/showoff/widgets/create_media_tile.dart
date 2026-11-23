@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../../../core/constants/app_theme.dart';
 
 class AddMediaTile extends StatelessWidget {
   final VoidCallback onTap;
@@ -13,22 +12,29 @@ class AddMediaTile extends StatelessWidget {
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16.r),
+          borderRadius: BorderRadius.circular(12.r),
           border: Border.all(
-            color: const Color(0xFFFF4D8D).withValues(alpha: 0.4),
-            width: 2,
-            strokeAlign: BorderSide.strokeAlignInside,
+            color: Colors.white.withValues(alpha: 0.1),
+            width: 1,
           ),
-          color: const Color(0xFFFF4D8D).withValues(alpha: 0.1),
+          color: Colors.white.withValues(alpha: 0.04),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.add_photo_alternate_rounded, size: 32.sp, color: const Color(0xFFFF4D8D)),
-            SizedBox(height: 6.h),
+            Icon(
+              Icons.add_rounded,
+              size: 26.sp,
+              color: Colors.white.withValues(alpha: 0.7),
+            ),
+            SizedBox(height: 4.h),
             Text(
-              'Add',
-              style: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.w600, color: const Color(0xFFFF4D8D)),
+              'Add more',
+              style: TextStyle(
+                fontSize: 11.5.sp,
+                fontWeight: FontWeight.w500,
+                color: Colors.white.withValues(alpha: 0.7),
+              ),
             ),
           ],
         ),
@@ -55,37 +61,81 @@ class MediaImageTile extends StatelessWidget {
       fit: StackFit.expand,
       children: [
         ClipRRect(
-          borderRadius: BorderRadius.circular(16.r),
-          child: Image.file(file, fit: BoxFit.cover),
+          borderRadius: BorderRadius.circular(12.r),
+          child: Image.file(
+            file,
+            fit: BoxFit.cover,
+          ),
         ),
+
+        // Subtle gradient overlay for contrast on badges & buttons
+        Positioned.fill(
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12.r),
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.black.withValues(alpha: 0.25),
+                  Colors.transparent,
+                  Colors.black.withValues(alpha: 0.35),
+                ],
+                stops: const [0.0, 0.5, 1.0],
+              ),
+            ),
+          ),
+        ),
+
+        // Cover Badge
         if (isFirst)
           Positioned(
             bottom: 6.h,
             left: 6.w,
             child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
+              padding: EdgeInsets.symmetric(horizontal: 7.w, vertical: 2.5.h),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(colors: [Color(0xFFFF4D8D), AppTheme.primaryBlue]),
-                borderRadius: BorderRadius.circular(20.r),
-                boxShadow: [
-                  BoxShadow(color: Colors.black.withValues(alpha: 0.3), blurRadius: 4, offset: const Offset(0, 2)),
-                ],
+                color: Colors.black.withValues(alpha: 0.75),
+                borderRadius: BorderRadius.circular(6.r),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.15),
+                  width: 0.8,
+                ),
               ),
               child: Text(
                 'Cover',
-                style: TextStyle(color: Colors.white, fontSize: 10.sp, fontWeight: FontWeight.w700),
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 10.sp,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.2,
+                ),
               ),
             ),
           ),
+
+        // Remove Button
         Positioned(
-          top: 5.h,
-          right: 5.w,
+          top: 6.h,
+          right: 6.w,
           child: GestureDetector(
             onTap: onRemove,
+            behavior: HitTestBehavior.opaque,
             child: Container(
-              padding: const EdgeInsets.all(4),
-              decoration: const BoxDecoration(color: Colors.black54, shape: BoxShape.circle),
-              child: Icon(Icons.close_rounded, color: Colors.white, size: 14.sp),
+              padding: EdgeInsets.all(4.w),
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.65),
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.15),
+                  width: 0.8,
+                ),
+              ),
+              child: Icon(
+                Icons.close_rounded,
+                color: Colors.white,
+                size: 13.sp,
+              ),
             ),
           ),
         ),

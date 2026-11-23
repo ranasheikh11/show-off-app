@@ -9,6 +9,7 @@ class CustomTextField extends StatefulWidget {
   final bool isPassword;
   final TextInputType keyboardType;
   final Widget? prefixIcon;
+  final Widget? suffixIcon;
   final String? Function(String?)? validator;
   final String? errorText;
   final void Function(String)? onChanged;
@@ -22,6 +23,10 @@ class CustomTextField extends StatefulWidget {
   final Color? focusedBorderColor;
   final Color? labelColor;
   final Iterable<String>? autofillHints;
+  final TextInputAction? textInputAction;
+  final void Function(String)? onFieldSubmitted;
+  final FocusNode? focusNode;
+  final AutovalidateMode? autovalidateMode;
 
   const CustomTextField({
     super.key,
@@ -31,6 +36,7 @@ class CustomTextField extends StatefulWidget {
     this.isPassword = false,
     this.keyboardType = TextInputType.text,
     this.prefixIcon,
+    this.suffixIcon,
     this.validator,
     this.errorText,
     this.onChanged,
@@ -44,6 +50,10 @@ class CustomTextField extends StatefulWidget {
     this.focusedBorderColor,
     this.labelColor,
     this.autofillHints,
+    this.textInputAction,
+    this.onFieldSubmitted,
+    this.focusNode,
+    this.autovalidateMode,
   });
 
   @override
@@ -82,18 +92,18 @@ class _CustomTextFieldState extends State<CustomTextField> {
   }
 
   Color _getStrengthColor(double strength) {
-    if (strength <= 0.25) return Colors.red;
-    if (strength <= 0.5) return Colors.orange;
-    if (strength <= 0.75) return Colors.yellow.shade700;
-    return Colors.green;
+    if (strength <= 0.25) return const Color(0xFFEF4444);
+    if (strength <= 0.5) return const Color(0xFFF59E0B);
+    if (strength <= 0.75) return const Color(0xFF10B981);
+    return const Color(0xFF06B6D4);
   }
 
   String _getStrengthText(double strength) {
     if (strength == 0) return '';
-    if (strength <= 0.25) return 'Weak';
-    if (strength <= 0.5) return 'Fair';
-    if (strength <= 0.75) return 'Good';
-    return 'Strong';
+    if (strength <= 0.25) return 'Too short';
+    if (strength <= 0.5) return 'Fair (add capital & number)';
+    if (strength <= 0.75) return 'Good password';
+    return 'Great & secure! 🔒';
   }
 
   @override
@@ -103,77 +113,140 @@ class _CustomTextFieldState extends State<CustomTextField> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          widget.label,
-          style: TextStyle(
-            fontSize: 14.sp,
-            fontWeight: FontWeight.w500,
-            color: widget.labelColor ?? Colors.white,
+        if (widget.label.isNotEmpty) ...[
+          Text(
+            widget.label,
+            style: TextStyle(
+              fontSize: 13.5.sp,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.2,
+              color: widget.labelColor ?? const Color(0xFFE2E8F0),
+            ),
           ),
-        ),
-        SizedBox(height: 8.h),
+          SizedBox(height: 8.h),
+        ],
         TextFormField(
           controller: widget.controller,
+          focusNode: widget.focusNode,
           obscureText: _obscureText,
           keyboardType: widget.keyboardType,
+          textInputAction: widget.textInputAction,
+          onFieldSubmitted: widget.onFieldSubmitted,
+          autovalidateMode: widget.autovalidateMode,
           autofillHints: widget.autofillHints,
           validator: widget.validator,
           onChanged: _onTextChanged,
           readOnly: widget.readOnly,
           onTap: widget.onTap,
-          style: TextStyle(color: widget.textColor ?? Colors.white),
+          cursorColor: widget.focusedBorderColor ?? const Color(0xFF3B82F6),
+          style: TextStyle(
+            color: widget.textColor ?? Colors.white,
+            fontSize: 15.sp,
+            fontWeight: FontWeight.w400,
+          ),
           decoration: InputDecoration(
             hintText: widget.hint,
-            hintStyle: TextStyle(color: widget.hintColor ?? Colors.white54, fontSize: 14.sp),
+            hintStyle: TextStyle(
+              color: widget.hintColor ?? Colors.white.withValues(alpha: 0.35),
+              fontSize: 14.sp,
+              fontWeight: FontWeight.w400,
+            ),
             error: widget.errorText != null
-                ? Row(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Icon(Icons.error_outline, color: AppTheme.errorRed, size: 14.sp),
-                      SizedBox(width: 4.w),
-                      Expanded(
-                        child: Text(widget.errorText!, style: TextStyle(color: AppTheme.errorRed, fontSize: 12.sp)),
-                      ),
-                    ],
-                  )
-                : null,
-            prefixIcon: widget.prefixIcon,
-            suffixIcon: widget.isPassword
-                ? IconButton(
-                    icon: Icon(
-                      _obscureText ? Icons.visibility_off : Icons.visibility,
-                      color: widget.hintColor ?? Colors.white54,
+                ? Padding(
+                    padding: EdgeInsets.only(top: 4.h),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Icon(Icons.error_outline_rounded,
+                            color: AppTheme.errorRed, size: 14.sp),
+                        SizedBox(width: 5.w),
+                        Expanded(
+                          child: Text(
+                            widget.errorText!,
+                            style: TextStyle(
+                              color: AppTheme.errorRed,
+                              fontSize: 12.sp,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                    onPressed: () {
-                      setState(() {
-                        _obscureText = !_obscureText;
-                      });
-                    },
                   )
                 : null,
+            prefixIcon: widget.prefixIcon != null
+                ? Padding(
+                    padding: EdgeInsets.only(left: 14.w, right: 12.w),
+                    child: widget.prefixIcon,
+                  )
+                : null,
+            prefixIconConstraints:
+                const BoxConstraints(minWidth: 0, minHeight: 0),
+            suffixIcon: widget.suffixIcon ??
+                (widget.isPassword
+                    ? IconButton(
+                        icon: Icon(
+                          _obscureText
+                              ? Icons.visibility_off_outlined
+                              : Icons.visibility_outlined,
+                          color: widget.hintColor ??
+                              Colors.white.withValues(alpha: 0.45),
+                          size: 20.sp,
+                        ),
+                        splashRadius: 20.r,
+                        onPressed: () {
+                          setState(() {
+                            _obscureText = !_obscureText;
+                          });
+                        },
+                      )
+                    : null),
             filled: true,
-            fillColor: widget.fillColor ?? const Color(0xFF282C4A),
-            contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+            fillColor: widget.fillColor ?? const Color(0xFF1E2138),
+            contentPadding:
+                EdgeInsets.symmetric(horizontal: 16.w, vertical: 15.h),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.r),
-              borderSide: BorderSide(color: widget.borderColor ?? Colors.transparent),
+              borderRadius: BorderRadius.circular(14.r),
+              borderSide: BorderSide(
+                color: widget.borderColor ??
+                    Colors.white.withValues(alpha: 0.08),
+                width: 1,
+              ),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.r),
-              borderSide: BorderSide(color: widget.borderColor ?? Colors.transparent),
+              borderRadius: BorderRadius.circular(14.r),
+              borderSide: BorderSide(
+                color: widget.borderColor ??
+                    Colors.white.withValues(alpha: 0.08),
+                width: 1,
+              ),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.r),
-              borderSide: BorderSide(color: widget.focusedBorderColor ?? const Color(0xFFFF4D8D), width: 1),
+              borderRadius: BorderRadius.circular(14.r),
+              borderSide: BorderSide(
+                color: widget.focusedBorderColor ?? const Color(0xFF3B82F6),
+                width: 1.5,
+              ),
             ),
             errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.r),
-              borderSide: const BorderSide(color: AppTheme.errorRed),
+              borderRadius: BorderRadius.circular(14.r),
+              borderSide: const BorderSide(color: AppTheme.errorRed, width: 1.2),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14.r),
+              borderSide: const BorderSide(color: AppTheme.errorRed, width: 1.5),
+            ),
+            errorStyle: TextStyle(
+              color: AppTheme.errorRed,
+              fontSize: 12.sp,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ),
-        if (widget.isPassword && widget.showStrengthIndicator && _password.isNotEmpty) ...[
+        if (widget.isPassword &&
+            widget.showStrengthIndicator &&
+            _password.isNotEmpty) ...[
           SizedBox(height: 8.h),
           Row(
             children: [
@@ -182,18 +255,19 @@ class _CustomTextFieldState extends State<CustomTextField> {
                   borderRadius: BorderRadius.circular(4.r),
                   child: LinearProgressIndicator(
                     value: strength,
-                    backgroundColor: Colors.grey.shade200,
-                    valueColor: AlwaysStoppedAnimation<Color>(_getStrengthColor(strength)),
-                    minHeight: 6.h,
+                    backgroundColor: Colors.white.withValues(alpha: 0.08),
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                        _getStrengthColor(strength)),
+                    minHeight: 4.h,
                   ),
                 ),
               ),
-              SizedBox(width: 8.w),
+              SizedBox(width: 10.w),
               Text(
                 _getStrengthText(strength),
                 style: TextStyle(
-                  fontSize: 12.sp,
-                  fontWeight: FontWeight.bold,
+                  fontSize: 11.5.sp,
+                  fontWeight: FontWeight.w600,
                   color: _getStrengthColor(strength),
                 ),
               ),

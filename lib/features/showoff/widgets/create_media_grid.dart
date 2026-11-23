@@ -21,19 +21,26 @@ class CreateMediaGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final itemWidth = (constraints.maxWidth - 40.w - 20.w) / 3;
+        final itemWidth = (constraints.maxWidth - 40.w - 18.w) / 3;
+        final bool canAddMore = images.length < 10;
+        final totalCount = images.length + (canAddMore ? 1 : 0);
+
         return GridView.builder(
+          physics: const NeverScrollableScrollPhysics(),
+          shrinkWrap: true,
           padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 3,
-            crossAxisSpacing: 10.w,
-            mainAxisSpacing: 10.h,
+            crossAxisSpacing: 9.w,
+            mainAxisSpacing: 9.h,
+            childAspectRatio: 1.0,
           ),
-          itemCount: images.length + 1,
+          itemCount: totalCount,
           itemBuilder: (context, index) {
-            if (index == 0) return AddMediaTile(onTap: onAddTap);
-            final imgIndex = index - 1;
-            return _buildDraggableTile(imgIndex, itemWidth);
+            if (index < images.length) {
+              return _buildDraggableTile(index, itemWidth);
+            }
+            return AddMediaTile(onTap: onAddTap);
           },
         );
       },
@@ -57,25 +64,42 @@ class CreateMediaGrid extends StatelessWidget {
               width: size,
               height: size,
               child: Transform.scale(
-                scale: 1.08,
+                scale: 1.05,
                 child: Opacity(
-                  opacity: 0.92,
-                  child: MediaImageTile(file: file, isFirst: isFirst, onRemove: () {}),
+                  opacity: 0.95,
+                  child: MediaImageTile(
+                    file: file,
+                    isFirst: isFirst,
+                    onRemove: () {},
+                  ),
                 ),
               ),
             ),
           ),
           childWhenDragging: Opacity(
             opacity: 0.25,
-            child: MediaImageTile(file: file, isFirst: isFirst, onRemove: () => onRemove(index)),
+            child: MediaImageTile(
+              file: file,
+              isFirst: isFirst,
+              onRemove: () => onRemove(index),
+            ),
           ),
           child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
+            duration: const Duration(milliseconds: 180),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16.r),
-              border: isHovered ? Border.all(color: const Color(0xFFFF4D8D), width: 2.5) : null,
+              borderRadius: BorderRadius.circular(12.r),
+              border: isHovered
+                  ? Border.all(
+                      color: const Color(0xFF3B82F6),
+                      width: 2,
+                    )
+                  : null,
             ),
-            child: MediaImageTile(file: file, isFirst: isFirst, onRemove: () => onRemove(index)),
+            child: MediaImageTile(
+              file: file,
+              isFirst: isFirst,
+              onRemove: () => onRemove(index),
+            ),
           ),
         );
       },

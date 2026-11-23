@@ -12,6 +12,7 @@ class CustomButton extends StatelessWidget {
   final Color? color;
   final Gradient? gradient;
   final double? borderRadius;
+  final IconData? icon;
 
   const CustomButton({
     super.key,
@@ -24,40 +25,60 @@ class CustomButton extends StatelessWidget {
     this.color,
     this.gradient,
     this.borderRadius,
+    this.icon,
   });
 
   @override
   Widget build(BuildContext context) {
+    final double radius = borderRadius ?? 14.r;
+    final effectiveHeight = height ?? 52.h;
+
     return SizedBox(
       width: width ?? double.infinity,
-      height: height ?? 50.h,
+      height: effectiveHeight,
       child: isOutlined
           ? OutlinedButton(
               onPressed: isLoading ? null : onPressed,
               style: OutlinedButton.styleFrom(
-                side: BorderSide(color: color ?? AppTheme.primaryBlue, width: 2),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(borderRadius ?? 12.r)),
+                side: BorderSide(
+                    color: color ?? AppTheme.primaryBlue, width: 1.5),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(radius)),
               ),
               child: _buildChild(color ?? AppTheme.primaryBlue),
             )
           : Container(
               decoration: BoxDecoration(
-                gradient: gradient ?? LinearGradient(colors: [color ?? AppTheme.primaryBlue, color ?? AppTheme.primaryBlue]),
-                borderRadius: BorderRadius.circular(borderRadius ?? 12.r),
-                boxShadow: gradient != null ? [
-                  BoxShadow(
-                    color: gradient!.colors.last.withValues(alpha: 0.3),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ] : null,
+                gradient: gradient ??
+                    LinearGradient(colors: [
+                      color ?? AppTheme.primaryBlue,
+                      color ?? AppTheme.primaryBlue
+                    ]),
+                borderRadius: BorderRadius.circular(radius),
+                boxShadow: gradient != null
+                    ? [
+                        BoxShadow(
+                          color: gradient!.colors.first.withValues(alpha: 0.35),
+                          blurRadius: 18,
+                          offset: const Offset(0, 6),
+                        ),
+                      ]
+                    : [
+                        BoxShadow(
+                          color: (color ?? AppTheme.primaryBlue)
+                              .withValues(alpha: 0.25),
+                          blurRadius: 14,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
               ),
               child: ElevatedButton(
                 onPressed: isLoading ? null : onPressed,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.transparent,
                   shadowColor: Colors.transparent,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(borderRadius ?? 12.r)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(radius)),
                   elevation: 0,
                 ),
                 child: _buildChild(Colors.white),
@@ -69,9 +90,31 @@ class CustomButton extends StatelessWidget {
   Widget _buildChild(Color textColor) {
     if (isLoading) {
       return SizedBox(
-        height: 24.w,
-        width: 24.w,
-        child: CircularProgressIndicator(color: textColor, strokeWidth: 2.5),
+        height: 22.w,
+        width: 22.w,
+        child: const CircularProgressIndicator(
+          color: Colors.white,
+          strokeWidth: 2.2,
+        ),
+      );
+    }
+    if (icon != null) {
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, color: textColor, size: 18.sp),
+          SizedBox(width: 8.w),
+          Text(
+            text,
+            style: TextStyle(
+              color: textColor,
+              fontSize: 16.sp,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.3,
+            ),
+          ),
+        ],
       );
     }
     return Text(
@@ -79,7 +122,8 @@ class CustomButton extends StatelessWidget {
       style: TextStyle(
         color: textColor,
         fontSize: 16.sp,
-        fontWeight: FontWeight.w600,
+        fontWeight: FontWeight.w700,
+        letterSpacing: 0.3,
       ),
     );
   }

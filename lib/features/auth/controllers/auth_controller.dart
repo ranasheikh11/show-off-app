@@ -1,27 +1,33 @@
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart' hide FormData, MultipartFile;
 import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
+
 import '../../../core/storage/hive_service.dart';
 import '../models/user_model.dart';
+
 import 'package:dio/dio.dart';
+
 import '../services/auth_service.dart';
 import '../../../core/constants/api_url.dart';
 import '../../../core/network/dio_client.dart';
 import '../../chat/services/socket_service.dart';
 import '../../../core/services/push_notification_service.dart';
+
 import 'package:firebase_messaging/firebase_messaging.dart';
 
 class AuthController extends GetxController {
   final AuthService _authService = AuthService();
-  
+
   var isLoading = false.obs;
+  var isUpdatingNotifications = false.obs;
   var currentUser = Rxn<UserModel>();
 
   @override
   void onInit() {
     super.onInit();
     _loadUserFromHive();
-    
+
     // Listen for FCM token changes (e.g. when the token expires and is refreshed)
     FirebaseMessaging.instance.onTokenRefresh.listen((newToken) {
       if (currentUser.value != null) {
@@ -33,7 +39,9 @@ class AuthController extends GetxController {
   void _loadUserFromHive() async {
     final userData = HiveService.getUser();
     if (userData != null) {
-      currentUser.value = UserModel.fromJson(Map<String, dynamic>.from(userData));
+      currentUser.value = UserModel.fromJson(
+        Map<String, dynamic>.from(userData),
+      );
       // Fetch fresh profile in background
       try {
         final freshUser = await _authService.getProfile();
@@ -59,7 +67,10 @@ class AuthController extends GetxController {
 
   Future<void> _sendTokenToBackend(String token) async {
     try {
-      await DioClient.instance.put(ApiUrl.updateFcmToken, data: {'fcmToken': token});
+      await DioClient.instance.put(
+        ApiUrl.updateFcmToken,
+        data: {'fcmToken': token},
+      );
     } catch (e) {
       debugPrint('Failed to send FCM token to backend: $e');
     }
@@ -77,23 +88,28 @@ class AuthController extends GetxController {
 
   var loginError = RxnString();
 
-  Future<void> login(String email, String password, BuildContext context) async {
+  Future<void> login(
+    String email,
+    String password,
+    BuildContext context,
+  ) async {
     try {
       isLoading.value = true;
       loginError.value = null; // Reset error on new attempt
       final res = await _authService.login(email, password);
-      
+
       final data = res['data'];
       final token = data['token'];
       final user = UserModel.fromJson(data['user']);
-      
+
       await HiveService.saveToken(token);
       await HiveService.saveUser(data['user']);
       currentUser.value = user;
-      
+
       _updateFcmToken();
-      
-      if (context.mounted) context.go('/home'); // Replace with actual home route later
+
+      if (context.mounted)
+        context.go('/home'); // Replace with actual home route later
     } catch (e) {
       String errorMessage = e.toString();
       if (e is DioException && e.response?.data is Map) {
@@ -116,16 +132,22 @@ class AuthController extends GetxController {
       isLoading.value = true;
       registerEmailError.value = null; // Reset error on new attempt
       final res = await _authService.register(data);
-      
+
       // Register only returns success message, no token. Redirect to login.
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res['message'] ?? 'Registered successfully!'), backgroundColor: Colors.green));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(res['message'] ?? 'Registered successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
         context.pop(); // Go back to login screen
       }
     } catch (e) {
       if (e is DioException && e.response?.statusCode == 400) {
         final msg = e.response?.data?['message'];
-        if (msg != null && msg.toString().toLowerCase().contains('email already exists')) {
+        if (msg != null &&
+            msg.toString().toLowerCase().contains('email already exists')) {
           registerEmailError.value = msg.toString();
           return;
         }
@@ -173,18 +195,30 @@ class AuthController extends GetxController {
       if (e is DioException && e.response?.data is Map) {
         errorMessage = (e.response!.data as Map)['message'] ?? errorMessage;
       }
-      _showError(context, errorMessage);
+      if (context.mounted) {
+        _showError(context, errorMessage);
+      }
     } finally {
       isLoading.value = false;
     }
   }
 
-  Future<void> resetPassword(String email, String otp, String newPassword, BuildContext context) async {
+  Future<void> resetPassword(
+    String email,
+    String otp,
+    String newPassword,
+    BuildContext context,
+  ) async {
     try {
       isLoading.value = true;
       await _authService.resetPassword(email, otp, newPassword);
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Password Reset Successful'), backgroundColor: Colors.green));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Password Reset Successful'),
+            backgroundColor: Colors.green,
+          ),
+        );
         context.go('/login');
       }
     } catch (e) {
@@ -192,33 +226,48 @@ class AuthController extends GetxController {
       if (e is DioException && e.response?.data is Map) {
         errorMessage = (e.response!.data as Map)['message'] ?? errorMessage;
       }
-      _showError(context, errorMessage);
+      if (context.mounted) {
+        _showError(context, errorMessage);
+      }
     } finally {
       isLoading.value = false;
     }
   }
 
-  Future<void> updateProfile(Map<String, dynamic> data, BuildContext context, {String? imagePath}) async {
+  Future<void> updateProfile(
+    Map<String, dynamic> data,
+    BuildContext context, {
+    String? imagePath,
+  }) async {
     try {
       isLoading.value = true;
-      
+
       // If there's a new image, upload it first
       if (imagePath != null) {
         final formData = FormData.fromMap({
-          'file': await MultipartFile.fromFile(imagePath, filename: imagePath.split('/').last),
+          'file': await MultipartFile.fromFile(
+            imagePath,
+            filename: imagePath.split('/').last,
+          ),
         });
-        final uploadRes = await DioClient.instance.post(ApiUrl.uploadMedia, data: formData);
+        final uploadRes = await DioClient.instance.post(
+          ApiUrl.uploadMedia,
+          data: formData,
+        );
         data['profileImage'] = uploadRes.data['url'];
       }
 
       final updatedUser = await _authService.updateProfile(data);
-      
+
       currentUser.value = updatedUser;
       await HiveService.saveUser(updatedUser.toJson());
-      
+
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Profile updated successfully'), backgroundColor: Colors.green),
+          const SnackBar(
+            content: Text('Profile updated successfully'),
+            backgroundColor: Colors.green,
+          ),
         );
         Navigator.pop(context);
       }
@@ -227,9 +276,32 @@ class AuthController extends GetxController {
       if (e is DioException && e.response?.data is Map) {
         errorMessage = (e.response!.data as Map)['message'] ?? errorMessage;
       }
-      _showError(context, errorMessage);
+      if (context.mounted) {
+        _showError(context, errorMessage);
+      }
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  Future<void> toggleNotifications(bool enabled, BuildContext context) async {
+    try {
+      isUpdatingNotifications.value = true;
+      final updatedUser = await _authService.updateProfile({
+        'notificationsEnabled': enabled,
+      });
+      currentUser.value = updatedUser;
+      await HiveService.saveUser(updatedUser.toJson());
+    } catch (e) {
+      String errorMessage = e.toString();
+      if (e is DioException && e.response?.data is Map) {
+        errorMessage = (e.response!.data as Map)['message'] ?? errorMessage;
+      }
+      if (context.mounted) {
+        _showError(context, errorMessage);
+      }
+    } finally {
+      isUpdatingNotifications.value = false;
     }
   }
 
@@ -260,7 +332,7 @@ class AuthController extends GetxController {
     // Reset all GetX controllers so they fetch fresh data on next login.
     // force: true ensures they are removed from memory even if permanent.
     Get.deleteAll(force: true);
-    
+
     // Re-initialize AuthController as it's required globally
     Get.put(AuthController(), permanent: true);
 
@@ -273,20 +345,23 @@ class AuthController extends GetxController {
     try {
       isLoading.value = true;
       await DioClient.instance.delete(ApiUrl.deleteAccount);
-      
+
       // Cleanup locally
       await HiveService.clearAuth();
       currentUser.value = null;
       try {
         SocketService.disconnect();
       } catch (_) {}
-      
+
       Get.deleteAll(force: true);
       Get.put(AuthController(), permanent: true);
 
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Account deleted successfully'), backgroundColor: Colors.green),
+          const SnackBar(
+            content: Text('Account deleted successfully'),
+            backgroundColor: Colors.green,
+          ),
         );
         context.go('/login');
       }
@@ -295,7 +370,55 @@ class AuthController extends GetxController {
       if (e is DioException && e.response?.data is Map) {
         errorMessage = (e.response!.data as Map)['message'] ?? errorMessage;
       }
-      _showError(context, errorMessage);
+      if (context.mounted) {
+        _showError(context, errorMessage);
+      }
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<bool> deactivateAccount(BuildContext context) async {
+    try {
+      isLoading.value = true;
+      await DioClient.instance.post(ApiUrl.deactivateAccount);
+
+      // Cleanup locally
+      await HiveService.clearAuth();
+      currentUser.value = null;
+      try {
+        SocketService.disconnect();
+      } catch (_) {}
+
+      Get.deleteAll(force: true);
+      Get.put(AuthController(), permanent: true);
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Account deactivated. Log in anytime to reactivate.',
+              style: TextStyle(color: Colors.white, fontSize: 13.sp),
+            ),
+            backgroundColor: const Color(0xFF1E293B),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8.r),
+            ),
+          ),
+        );
+        context.go('/login');
+      }
+      return true;
+    } catch (e) {
+      String errorMessage = e.toString();
+      if (e is DioException && e.response?.data is Map) {
+        errorMessage = (e.response!.data as Map)['message'] ?? errorMessage;
+      }
+      if (context.mounted) {
+        _showError(context, errorMessage);
+      }
+      return false;
     } finally {
       isLoading.value = false;
     }

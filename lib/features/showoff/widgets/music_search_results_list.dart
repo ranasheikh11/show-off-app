@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../../../core/constants/app_theme.dart';
 import '../services/music_service.dart';
 import 'music_list_item.dart';
 
@@ -30,31 +29,74 @@ class MusicSearchResultsList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (isLoading) return const Center(child: CircularProgressIndicator(color: AppTheme.primaryBlue));
+    if (isLoading) {
+      return Center(
+        child: SizedBox(
+          width: 24.w,
+          height: 24.w,
+          child: const CircularProgressIndicator(
+            strokeWidth: 2,
+            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF3B82F6)),
+          ),
+        ),
+      );
+    }
+
     if (results.isEmpty) {
       return Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.music_note_rounded, size: 48.sp, color: Colors.white24),
-            SizedBox(height: 8.h),
-            Text('Search your favorite songs ✨', style: TextStyle(color: Colors.white60, fontSize: 13.sp)),
+            Icon(
+              Icons.music_off_outlined,
+              size: 38.sp,
+              color: Colors.white.withValues(alpha: 0.25),
+            ),
+            SizedBox(height: 10.h),
+            Text(
+              'No soundtracks found',
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.6),
+                fontSize: 13.5.sp,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            SizedBox(height: 4.h),
+            Text(
+              'Try searching with a different song or artist name',
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.35),
+                fontSize: 12.sp,
+              ),
+            ),
           ],
         ),
       );
     }
-    return ListView.builder(
+
+    return ListView.separated(
       controller: scrollController,
+      physics: const BouncingScrollPhysics(),
+      padding: EdgeInsets.symmetric(vertical: 4.h),
       itemCount: results.length + (isLoadingMore ? 1 : 0),
+      separatorBuilder: (context, index) => Divider(
+        color: Colors.white.withValues(alpha: 0.04),
+        height: 1,
+        indent: 74.w,
+        endIndent: 18.w,
+      ),
       itemBuilder: (context, i) {
         if (i == results.length) {
           return Padding(
             padding: EdgeInsets.symmetric(vertical: 14.h),
             child: const Center(
               child: SizedBox(
-                width: 22,
-                height: 22,
-                child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.primaryBlue),
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF3B82F6)),
+                ),
               ),
             ),
           );
@@ -72,4 +114,3 @@ class MusicSearchResultsList extends StatelessWidget {
     );
   }
 }
-

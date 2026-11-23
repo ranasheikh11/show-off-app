@@ -16,11 +16,16 @@ class MusicSearchBottomSheet extends StatelessWidget {
     final c = Get.put(MusicSearchController());
 
     return Container(
-      height: MediaQuery.of(context).size.height * 0.8,
+      height: MediaQuery.of(context).size.height * 0.82,
       decoration: BoxDecoration(
-        color: const Color(0xFF16182B),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
-        border: Border(top: BorderSide(color: Colors.white.withValues(alpha: 0.12))),
+        color: const Color(0xFF0F111D),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+        border: Border(
+          top: BorderSide(
+            color: Colors.white.withValues(alpha: 0.08),
+            width: 1,
+          ),
+        ),
       ),
       child: Column(
         children: [

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../../../core/constants/app_theme.dart';
 import '../services/music_service.dart';
 
 class MusicListItem extends StatelessWidget {
@@ -21,105 +21,148 @@ class MusicListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 5.h),
-      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(14.r),
-        border: Border.all(
-          color: isPlaying ? AppTheme.primaryBlue.withValues(alpha: 0.5) : Colors.white.withValues(alpha: 0.08),
-        ),
-      ),
-      child: Row(
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(10.r),
-            child: SizedBox(
-              width: 48.w,
-              height: 48.w,
-              child: music.coverImage != null
-                  ? Image.network(
-                      music.coverImage!,
-                      fit: BoxFit.cover,
-                      errorBuilder: (c, e, s) => _fallbackCover(),
-                    )
-                  : _fallbackCover(),
-            ),
-          ),
-          SizedBox(width: 12.w),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  music.title,
-                  style: TextStyle(color: Colors.white, fontSize: 14.sp, fontWeight: FontWeight.w600),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+    return InkWell(
+      onTap: () {
+        HapticFeedback.lightImpact();
+        onSelect();
+      },
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 10.h),
+        child: Row(
+          children: [
+            // Album Art / Fallback
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8.r),
+              child: SizedBox(
+                width: 44.w,
+                height: 44.w,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    music.coverImage != null
+                        ? Image.network(
+                            music.coverImage!,
+                            fit: BoxFit.cover,
+                            errorBuilder: (c, e, s) => _fallbackCover(),
+                          )
+                        : _fallbackCover(),
+                    if (isPlaying)
+                      Container(
+                        color: Colors.black.withValues(alpha: 0.45),
+                        child: Icon(
+                          Icons.equalizer_rounded,
+                          color: const Color(0xFF60A5FA),
+                          size: 20.sp,
+                        ),
+                      ),
+                  ],
                 ),
-                SizedBox(height: 3.h),
-                Text(
-                  music.artist,
-                  style: TextStyle(color: Colors.white60, fontSize: 12.sp),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-          SizedBox(width: 8.w),
-          GestureDetector(
-            onTap: onPlayToggle,
-            child: Container(
-              width: 36.w,
-              height: 36.w,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: isPlaying ? AppTheme.primaryBlue : Colors.white.withValues(alpha: 0.1),
               ),
-              child: isLoading
-                  ? Center(
-                      child: SizedBox(
-                        width: 16.w,
-                        height: 16.w,
-                        child: const CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+            ),
+            SizedBox(width: 12.w),
+
+            // Title & Artist
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    music.title,
+                    style: TextStyle(
+                      color: isPlaying
+                          ? const Color(0xFF60A5FA)
+                          : Colors.white.withValues(alpha: 0.95),
+                      fontSize: 13.5.sp,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  SizedBox(height: 3.h),
+                  Text(
+                    music.artist,
+                    style: TextStyle(
+                      color: const Color(0xFF94A3B8),
+                      fontSize: 12.sp,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(width: 8.w),
+
+            // Play / Pause Preview Button
+            IconButton(
+              icon: isLoading
+                  ? SizedBox(
+                      width: 16.w,
+                      height: 16.w,
+                      child: const CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white70),
                       ),
                     )
                   : Icon(
-                      isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
-                      color: Colors.white,
-                      size: 20.sp,
+                      isPlaying
+                          ? Icons.pause_circle_filled_rounded
+                          : Icons.play_circle_outline_rounded,
+                      color: isPlaying
+                          ? const Color(0xFF60A5FA)
+                          : Colors.white.withValues(alpha: 0.65),
+                      size: 24.sp,
                     ),
+              splashRadius: 20.r,
+              onPressed: () {
+                HapticFeedback.selectionClick();
+                onPlayToggle();
+              },
             ),
-          ),
-          SizedBox(width: 8.w),
-          GestureDetector(
-            onTap: onSelect,
-            child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 7.h),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(colors: [Color(0xFFFF4D8D), AppTheme.primaryBlue]),
-                borderRadius: BorderRadius.circular(16.r),
-              ),
-              child: Text(
-                'Add',
-                style: TextStyle(color: Colors.white, fontSize: 12.sp, fontWeight: FontWeight.w700),
+            SizedBox(width: 4.w),
+
+            // Clean, non-glowing Add Button
+            InkWell(
+              onTap: () {
+                HapticFeedback.lightImpact();
+                onSelect();
+              },
+              borderRadius: BorderRadius.circular(16.r),
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 6.h),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(16.r),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.1),
+                    width: 1,
+                  ),
+                ),
+                child: Text(
+                  'Add',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 12.sp,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
   Widget _fallbackCover() {
     return Container(
-      color: Colors.white.withValues(alpha: 0.1),
-      child: Icon(Icons.music_note_rounded, color: AppTheme.primaryBlue, size: 24.sp),
+      color: Colors.white.withValues(alpha: 0.06),
+      child: Icon(
+        Icons.music_note_rounded,
+        color: Colors.white.withValues(alpha: 0.4),
+        size: 20.sp,
+      ),
     );
   }
 }
-
-
